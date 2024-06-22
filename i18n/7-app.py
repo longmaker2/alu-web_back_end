@@ -54,6 +54,7 @@ def get_user():
     else:
         return None
 
+
 @babel.timezoneselector
 def get_timezone():
     ''' the best time zone '''
