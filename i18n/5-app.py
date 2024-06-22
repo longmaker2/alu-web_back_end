@@ -1,21 +1,11 @@
 #!/usr/bin/env python3
-''' Flask app '''
-
-from flask import Flask, request, render_template, g
-from flask_babel import Babel, gettext
-
+"""Simple flask app setup"""
+from flask import Flask, render_template, request, g
+from flask_babel import Babel, _ as get_translation
 app = Flask(__name__)
 babel = Babel(app)
 
 
-class Config:
-    ''' App config '''
-    LANGUAGES = ["en", "fr"]
-    BABEL_DEFAULT_LOCALE = "en"
-    BABEL_DEFAULT_TIMEZONE = "UTC"
-
-
-app.config.from_object(Config)
 users = {
     1: {"name": "Balou", "locale": "fr", "timezone": "Europe/Paris"},
     2: {"name": "Beyonce", "locale": "en", "timezone": "US/Central"},
@@ -24,35 +14,49 @@ users = {
 }
 
 
-@app.before_request
-def before_request():
-    ''' def before request '''
-    g.user = get_user()
+class Config(object):
+    """Class to set defualts for babel"""
+    LANGUAGES = ["en", "fr"]
+    Babel.default_locale = "en"
+    Babel.default_timezone = "UTC"
+
+
+app.config.from_object(Config)
 
 
 @babel.localeselector
 def get_locale():
-    ''' return best languages '''
+    """Get best langauge for user"""
     locale = request.args.get('locale')
-    if locale:
+    if locale and locale in Config.LANGUAGES:
         return locale
     return request.accept_languages.best_match(app.config['LANGUAGES'])
 
 
-@app.route("/", methods=["GET"], strict_slashes=False)
-def hello_world():
-    ''' return the template '''
-    return render_template('5-index.html')
+@app.route('/')
+def index():
+    """Return simple homepage"""
+    if g.user:
+        login_msg = get_translation('logged_in_as', username=g.user['name'])
+    else:
+        login_msg = get_translation('not_logged_in')
+    return render_template('5-index.html', login_msg=login_msg)
 
 
 def get_user():
-    ''' return the right dictionary '''
-    Id = request.args.get('login_as')
-    if Id and int(Id) in users:
-        return users[int(Id)]
-    else:
-        return None
+    """get_user returns a user dictionary or None"""
+    user_id = request.args.get('login_as')
+    if user_id:
+        return users.get(int(user_id))
+
+    return None
+
+
+@app.before_request
+def before_request():
+    """find a user if any, and set it as a global"""
+    g.user = get_user()
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True, host='0.0.0.0', port=8000)

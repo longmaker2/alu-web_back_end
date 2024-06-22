@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Simple flask app setup"""
+from datetime import datetime
 from flask import Flask, render_template, request, g
-from flask_babel import Babel, _ as get_translation
+from flask_babel import Babel, _ as get_translation, format_datetime
+import pytz
+from pytz import timezone
 app = Flask(__name__)
 babel = Babel(app)
 
@@ -42,6 +45,28 @@ def get_locale():
     return request.accept_languages.best_match(app.config['LANGUAGES'])
 
 
+@babel.timezoneselector
+def get_timezone():
+    tz = request.args.get('timezone')
+    if tz:
+        try:
+            timezone(tz)
+            return tz
+        except UnknownTimeZoneError:
+            pass
+
+    if g.user:
+        tz = request.args.get('timezone')
+        if tz:
+            try:
+                timezone(tz)
+                return tz
+            except UnknownTimeZoneError:
+                pass
+
+    return Babel.default_timezone
+
+
 @app.route('/')
 def index():
     """Return simple homepage"""
@@ -49,7 +74,8 @@ def index():
         login_msg = get_translation('logged_in_as', username=g.user['name'])
     else:
         login_msg = get_translation('not_logged_in')
-    return render_template('6-index.html', login_msg=login_msg)
+    current_time = format_datetime(datetime.now())
+    return render_template('index.html', login_msg=login_msg, current_time=current_time)
 
 
 def get_user():
