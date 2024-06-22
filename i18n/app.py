@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """ Basic Flask app, Basic Babel setup, Get locale from request,
     Parametrize templates, Force locale with URL parameter, Mock logging in,
-    Use user locale, Infer appropriate time zone """
+    Use user locale, Infer appropriate time zone, Display the current time """
 from flask import Flask, render_template, request, g
 from flask_babel import Babel, gettext
 import pytz
+import datetime
 
 app = Flask(__name__)
 babel = Babel(app)
@@ -32,7 +33,7 @@ app.config.from_object(Config)
 @app.route('/')
 def root():
     """ basic Flask app """
-    return render_template("7-index.html")
+    return render_template("index.html")
 
 
 @babel.localeselector
@@ -68,22 +69,30 @@ def before_request():
     """ use get_user to find a user if any,
     and set it as a global on flask.g.user  """
     g.user = get_user()
+    utcNow = pytz.utc.localize(datetime.datetime.utcnow())
+    local_time_now = utcNow.astimezone(pytz.timezone(get_timezone()))
 
 
 @babel.timezoneselector
 def get_timezone():
     """ Infer appropriate time zone """
     localTimezone = request.args.get('timezone')
-    if localTimezone in pytz.all_timezones:
-        return localTimezone
-    else:
-        raise pytz.exceptions.UnknownTimeZoneError
-    userId = request.args.get('login_as')
-    localTimezone = users[int(userId)]['timezone']
-    if localTimezone in pytz.all_timezones:
-        return localTimezone
-    else:
-        raise pytz.exceptions.UnknownTimeZoneError
+    if localTimezone:
+        if localTimezone in pytz.all_timezones:
+            return localTimezone
+        else:
+            raise pytz.exceptions.UnknownTimeZoneError
+    try:
+        userId = request.args.get('login_as')
+        user = users[int(userId)]
+        localTimezone = user['timezone']
+    except Exception:
+        localTimezone = None
+    if localTimezone:
+        if localTimezone in pytz.all_timezones:
+            return localTimezone
+        else:
+            raise pytz.exceptions.UnknownTimeZoneError
     return app.config['BABEL_DEFAULT_TIMEZONE']
 
 

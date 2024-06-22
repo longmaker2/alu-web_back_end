@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-''' Flask app '''
-
+""" Basic Flask app """
 from flask import Flask, render_template
+
 app = Flask(__name__)
 
 
-@app.route("/", methods=["GET"], strict_slashes=False)
-def hello_world():
-    ''' return the template '''
+@app.route('/')
+def root():
+    """ basic Flask app """
     return render_template('0-index.html')
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run()
