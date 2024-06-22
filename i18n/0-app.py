@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-''' Flask app integration'''
+''' Flask app '''
 
 from flask import Flask, render_template
 app = Flask(__name__)
@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 @app.route("/", methods=["GET"], strict_slashes=False)
 def hello_world():
-    """returns the rendered template"""
+    ''' return the template '''
     return render_template('0-index.html')
 
 
