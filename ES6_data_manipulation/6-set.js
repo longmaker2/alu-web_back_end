@@ -1,3 +1,6 @@
-export default function setFromArray(array) {
-  return new Set(array);
+export default function setFromArray(arr) {
+  if (Array.isArray(arr)) {
+    return new Set(arr);
+  }
+  return Set();
 }
